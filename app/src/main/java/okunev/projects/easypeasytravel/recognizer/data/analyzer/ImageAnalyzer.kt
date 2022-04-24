@@ -1,4 +1,4 @@
-package okunev.projects.easypeasytravel.recognizer
+package okunev.projects.easypeasytravel.recognizer.data.analyzer
 
 import android.annotation.SuppressLint
 import androidx.camera.core.ImageAnalysis
@@ -14,5 +14,6 @@ class ImageAnalyzer(private val imageListener: (image: InputImage) -> Unit) :
             val imageInput = InputImage.fromMediaImage(mediaImage, image.imageInfo.rotationDegrees)
             imageListener(imageInput)
         }
+//        image.close()
     }
 }

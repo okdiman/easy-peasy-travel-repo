@@ -1,4 +1,4 @@
-package okunev.projects.easypeasytravel.recognizer
+package okunev.projects.easypeasytravel.recognizer.presentation
 
 import android.Manifest
 import android.content.ContentValues
@@ -12,28 +12,28 @@ import android.view.View
 import android.widget.Toast
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.video.Recorder
-import androidx.camera.video.Recording
-import androidx.camera.video.VideoCapture
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import by.kirich1409.viewbindingdelegate.viewBinding
+import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import dagger.hilt.android.AndroidEntryPoint
 import okunev.projects.easypeasytravel.R
 import okunev.projects.easypeasytravel.databinding.RecognizerFragmentBinding
+import okunev.projects.easypeasytravel.recognizer.data.analyzer.ImageAnalyzer
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+@AndroidEntryPoint
 class RecognizerFragment : Fragment(R.layout.recognizer_fragment) {
     private val binding: RecognizerFragmentBinding by viewBinding()
+    private val viewModel by viewModels<RecognizerViewModel>()
 
     private var imageCapture: ImageCapture? = null
-
-    private var videoCapture: VideoCapture<Recorder>? = null
-    private var recording: Recording? = null
 
     private lateinit var cameraExecutor: ExecutorService
 
@@ -54,7 +54,6 @@ class RecognizerFragment : Fragment(R.layout.recognizer_fragment) {
         super.onViewCreated(view, savedInstanceState)
         binding.apply {
             imageCaptureButton.setOnClickListener { takePhoto() }
-            videoCaptureButton.setOnClickListener { captureVideo() }
         }
     }
 
@@ -111,6 +110,10 @@ class RecognizerFragment : Fragment(R.layout.recognizer_fragment) {
                 }
 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                    val image = InputImage.fromFilePath(requireContext(), output.savedUri!!)
+                    createRecognizer(image)
+                    requireContext().contentResolver.delete(output.savedUri!!, null, null)
+
                     val msg = "Photo capture succeeded: ${output.savedUri}"
                     Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
                     Log.d(TAG, msg)
@@ -118,8 +121,6 @@ class RecognizerFragment : Fragment(R.layout.recognizer_fragment) {
             }
         )
     }
-
-    private fun captureVideo() {}
 
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
@@ -142,10 +143,7 @@ class RecognizerFragment : Fragment(R.layout.recognizer_fragment) {
                 .build()
                 .also {
                     it.setAnalyzer(cameraExecutor, ImageAnalyzer { image ->
-                        Log.d(
-                            TAG, "Average luminosity: ${image.rotationDegrees}//" +
-                                    "${image.bitmapInternal} // ${image.mediaImage}"
-                        )
+//                        createRecognizer(image)
                     })
                 }
 
@@ -179,8 +177,34 @@ class RecognizerFragment : Fragment(R.layout.recognizer_fragment) {
         cameraExecutor.shutdown()
     }
 
-    private fun createRecognizer() {
+    private fun createRecognizer(image: InputImage) {
         val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+        recognizer.process(image)
+            .addOnSuccessListener { result ->
+                val resultText = result.text
+                Log.e(TAG, resultText)
+//                for (block in result.textBlocks) {
+//                    val blockText = block.text
+//                    val blockCornerPoints = block.cornerPoints
+//                    val blockFrame = block.boundingBox
+//                    Log.e(TAG, "block - $blockText / $blockCornerPoints / $blockFrame")
+//                    for (line in block.lines) {
+//                        val lineText = line.text
+//                        val lineCornerPoints = line.cornerPoints
+//                        val lineFrame = line.boundingBox
+//                        Log.e(TAG, "line - $lineText / $lineCornerPoints / $lineFrame")
+//                        for (element in line.elements) {
+//                            val elementText = element.text
+//                            val elementCornerPoints = element.cornerPoints
+//                            val elementFrame = element.boundingBox
+//                            Log.e(TAG, "element - $elementText / $elementCornerPoints / $elementFrame")
+//                        }
+//                    }
+//                }
+            }
+            .addOnFailureListener { e ->
+                Log.e(TAG, "failure - $e")
+            }
     }
 
     companion object {
@@ -190,7 +214,8 @@ class RecognizerFragment : Fragment(R.layout.recognizer_fragment) {
         private val REQUIRED_PERMISSIONS =
             mutableListOf(
                 Manifest.permission.CAMERA,
-                Manifest.permission.RECORD_AUDIO
+                Manifest.permission.RECORD_AUDIO,
+                Manifest.permission.READ_EXTERNAL_STORAGE
             ).apply {
                 if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
                     add(Manifest.permission.WRITE_EXTERNAL_STORAGE)

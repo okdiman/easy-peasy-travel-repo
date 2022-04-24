@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/recognizerFragment"
-        android:name="okunev.projects.easypeasytravel.recognizer.RecognizerFragment"
+        android:name="okunev.projects.easypeasytravel.recognizer.presentation.RecognizerFragment"
         android:label="RecognizerFragment"
         tools:layout="@layout/recognizer_fragment" />
 </navigation>
