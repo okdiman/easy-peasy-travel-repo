@@ -1,5 +1,7 @@
 package okunev.projects.easypeasytravel.recognizer.domain.repositories
 
-interface RecognizerRepository {
+import androidx.camera.core.ImageCapture
 
+interface RecognizerRepository {
+    fun takePhoto(image: ImageCapture?)
 }
