@@ -21,7 +21,7 @@ class RecognizerRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context
 ) : RecognizerRepository {
 
-    override fun takePhoto(imageCapture: ImageCapture?) {
+    override fun takePhoto(imageCapture: ImageCapture?, listener: (text: String) -> Unit) {
         if (imageCapture == null) return
         val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US)
             .format(System.currentTimeMillis())
@@ -51,7 +51,7 @@ class RecognizerRepositoryImpl @Inject constructor(
                     val uri = output.savedUri
                     if (uri != null) {
                         val imageSaved = InputImage.fromFilePath(context, uri)
-                        createRecognizer(imageSaved)
+                        createRecognizer(imageSaved, listener)
                         context.contentResolver.delete(uri, null, null)
                     }
                 }
@@ -59,10 +59,11 @@ class RecognizerRepositoryImpl @Inject constructor(
         )
     }
 
-    private fun createRecognizer(image: InputImage) {
+    private fun createRecognizer(image: InputImage, listener: (text: String) -> Unit) {
         val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
         recognizer.process(image)
             .addOnSuccessListener { result ->
+                listener(result.text)
                 val resultText = result.text
                 Log.e(TAG, resultText)
 //                for (block in result.textBlocks) {
@@ -90,7 +91,7 @@ class RecognizerRepositoryImpl @Inject constructor(
     }
 
     companion object {
-        private const val MIME_TYPE = "image/jpeg"
+        private const val MIME_TYPE= "image/jpeg"
         private const val RELATIVE_PATH = "Pictures/CameraX-Image"
         private const val TAG = "CameraXApp"
         private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"

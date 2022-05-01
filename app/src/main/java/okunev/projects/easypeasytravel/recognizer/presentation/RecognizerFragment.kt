@@ -46,7 +46,11 @@ class RecognizerFragment : Fragment(R.layout.recognizer_fragment) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.imageCaptureButton.setOnClickListener { viewModel.onTranslateClick(imageCapture) }
+        binding.vImageCaptureButton.setOnClickListener {
+            viewModel.onTranslateClick(imageCapture){ recognizedText ->
+                binding.vTranslateTextView.text = recognizedText
+            }
+        }
         startCamera()
     }
 
@@ -75,7 +79,7 @@ class RecognizerFragment : Fragment(R.layout.recognizer_fragment) {
             val preview = Preview.Builder()
                 .build()
                 .also {
-                    it.setSurfaceProvider(binding.viewFinder.surfaceProvider)
+                    it.setSurfaceProvider(binding.vViewFinder.surfaceProvider)
                 }
 
             imageCapture = ImageCapture.Builder()

@@ -11,7 +11,7 @@ class RecognizerViewModel @Inject constructor(
     private val repository: RecognizerRepository
 ) : ViewModel() {
 
-    fun onTranslateClick(image: ImageCapture?) {
-        repository.takePhoto(image)
+    fun onTranslateClick(image: ImageCapture?, listener: (text: String) -> Unit) {
+        repository.takePhoto(image, listener)
     }
 }
