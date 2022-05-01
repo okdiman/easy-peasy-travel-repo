@@ -51,6 +51,9 @@ class RecognizerFragment : Fragment(R.layout.recognizer_fragment) {
                 binding.vTranslateTextView.text = recognizedText
             }
         }
+        binding.vClearTextButton.setOnClickListener {
+            binding.vTranslateTextView.text = ""
+        }
         startCamera()
     }
 
