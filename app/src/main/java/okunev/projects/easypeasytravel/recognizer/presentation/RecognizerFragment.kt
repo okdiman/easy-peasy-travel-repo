@@ -39,16 +39,15 @@ class RecognizerFragment : Fragment(R.layout.recognizer_fragment) {
     }
 
     private fun registerPermissionListener() {
-        permissionLauncher =
-            registerForActivityResult(
-                ActivityResultContracts.RequestMultiplePermissions()
-            ) { permissions ->
-                if (permissions.values.contains(false)) {
-                    onCameraDenied()
-                } else {
-                    startCamera()
-                }
+        permissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { permissions ->
+            if (permissions.values.contains(false)) {
+                onCameraDenied()
+            } else {
+                startCamera()
             }
+        }
     }
 
     private fun checkPermissions() {
