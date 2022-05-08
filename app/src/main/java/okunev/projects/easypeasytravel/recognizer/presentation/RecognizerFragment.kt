@@ -18,9 +18,6 @@ import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import okunev.projects.easypeasytravel.R
 import okunev.projects.easypeasytravel.databinding.RecognizerFragmentBinding
-import okunev.projects.easypeasytravel.recognizer.data.analyzer.ImageAnalyzer
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 
 @AndroidEntryPoint
 class RecognizerFragment : Fragment(R.layout.recognizer_fragment) {
@@ -28,25 +25,17 @@ class RecognizerFragment : Fragment(R.layout.recognizer_fragment) {
     private val viewModel by viewModels<RecognizerViewModel>()
 
     private lateinit var permissionLauncher: ActivityResultLauncher<Array<String>>
-
     private var imageCapture: ImageCapture? = null
-    private lateinit var cameraExecutor: ExecutorService
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         registerPermissionListener()
         checkPermissions()
-        cameraExecutor = Executors.newSingleThreadExecutor()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setClickListeners()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        cameraExecutor.shutdown()
     }
 
     private fun registerPermissionListener() {
@@ -99,7 +88,6 @@ class RecognizerFragment : Fragment(R.layout.recognizer_fragment) {
 
         cameraProviderFuture.addListener({
             val cameraProvider = cameraProviderFuture.get()
-
             val preview = Preview.Builder()
                 .build()
                 .also {
@@ -109,21 +97,11 @@ class RecognizerFragment : Fragment(R.layout.recognizer_fragment) {
             imageCapture = ImageCapture.Builder()
                 .build()
 
-            val imageAnalyzer = ImageAnalysis.Builder()
-                .build()
-                .also {
-                    it.setAnalyzer(cameraExecutor, ImageAnalyzer { image ->
-//                        createRecognizer(image)
-                    })
-                }
-
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
             try {
                 cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(
-                    this, cameraSelector, preview, imageCapture, imageAnalyzer
-                )
+                cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture)
             } catch (exc: Exception) {
 
             }
@@ -138,9 +116,7 @@ class RecognizerFragment : Fragment(R.layout.recognizer_fragment) {
                     binding.vTranslateTextView.text = recognizedText
                 }
             }
-            vClearTextButton.setOnClickListener {
-                binding.vTranslateTextView.text = ""
-            }
+            vClearTextButton.setOnClickListener { binding.vTranslateTextView.text = "" }
         }
     }
 
