@@ -1,20 +1,20 @@
 package okunev.projects.easypeasytravel.recognizer.presentation
 
 import android.Manifest
+import android.app.AlertDialog
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.View
-import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import by.kirich1409.viewbindingdelegate.viewBinding
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import okunev.projects.easypeasytravel.R
 import okunev.projects.easypeasytravel.databinding.RecognizerFragmentBinding
@@ -27,50 +27,71 @@ class RecognizerFragment : Fragment(R.layout.recognizer_fragment) {
     private val binding: RecognizerFragmentBinding by viewBinding()
     private val viewModel by viewModels<RecognizerViewModel>()
 
-    private var imageCapture: ImageCapture? = null
+    private lateinit var permissionLauncher: ActivityResultLauncher<Array<String>>
 
+    private var imageCapture: ImageCapture? = null
     private lateinit var cameraExecutor: ExecutorService
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Request camera permissions
-        if (allPermissionsGranted()) {
-            startCamera()
-        } else {
-            ActivityCompat.requestPermissions(
-                requireActivity(), REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS
-            )
-        }
+        registerPermissionListener()
+        checkPermissions()
         cameraExecutor = Executors.newSingleThreadExecutor()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.vImageCaptureButton.setOnClickListener {
-            viewModel.onTranslateClick(imageCapture){ recognizedText ->
-                binding.vTranslateTextView.text = recognizedText
-            }
-        }
-        binding.vClearTextButton.setOnClickListener {
-            binding.vTranslateTextView.text = ""
-        }
-        startCamera()
+        setClickListeners()
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int, permissions: Array<String>, grantResults:
-        IntArray
-    ) {
-        if (requestCode == REQUEST_CODE_PERMISSIONS) {
-            Log.e(TAG, "req")
-            if (allPermissionsGranted()) {
-                Log.e(TAG, "granted")
-                startCamera()
-            } else {
-                Log.e(TAG, "else")
+    override fun onDestroy() {
+        super.onDestroy()
+        cameraExecutor.shutdown()
+    }
+
+    private fun registerPermissionListener() {
+        permissionLauncher =
+            registerForActivityResult(
+                ActivityResultContracts.RequestMultiplePermissions()
+            ) { permissions ->
+                if (permissions.values.contains(false)) {
+                    onCameraDenied()
+                } else {
+                    startCamera()
+                }
+            }
+    }
+
+    private fun checkPermissions() {
+        when {
+            ContextCompat.checkSelfPermission(
+                requireContext(), Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED -> startCamera()
+            shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> {
                 showRationaleForCamera()
             }
+            else -> {
+                permissionLauncher.launch(REQUIRED_PERMISSIONS)
+            }
         }
+    }
+
+    private fun showRationaleForCamera() {
+        AlertDialog.Builder(requireContext())
+            .setTitle(R.string.permissions_show_rationale_title)
+            .setMessage(R.string.permissions_show_rationale_message)
+            .setCancelable(false)
+            .setNegativeButton(R.string.permissions_show_rationale_negative_button) { _, _ ->
+                onCameraDenied()
+            }
+            .setPositiveButton(R.string.permissions_show_rationale_positive_button) { _, _ ->
+                permissionLauncher.launch(REQUIRED_PERMISSIONS)
+            }
+            .show()
+    }
+
+    private fun onCameraDenied() {
+        Snackbar.make(binding.root, R.string.permission_denied_notify, Snackbar.LENGTH_LONG).show()
     }
 
     private fun startCamera() {
@@ -104,47 +125,26 @@ class RecognizerFragment : Fragment(R.layout.recognizer_fragment) {
                     this, cameraSelector, preview, imageCapture, imageAnalyzer
                 )
             } catch (exc: Exception) {
-                Log.e(TAG, "Use case binding failed", exc)
+
             }
 
         }, ContextCompat.getMainExecutor(requireContext()))
     }
 
-    private fun allPermissionsGranted() =
-        REQUIRED_PERMISSIONS.all {
-            ContextCompat.checkSelfPermission(
-                requireContext(), it
-            ) == PackageManager.PERMISSION_GRANTED
-        }
-
-
-    private fun showRationaleForCamera() {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.permissions_show_rationale_title)
-            .setMessage(R.string.permissions_show_rationale_message)
-            .setCancelable(false)
-            .setNegativeButton(R.string.permissions_show_rationale_negative_button) { _, _ -> }
-            .setPositiveButton(R.string.permissions_show_rationale_positive_button) { _, _ ->
-                startCamera()
+    private fun setClickListeners() {
+        binding.apply {
+            vImageCaptureButton.setOnClickListener {
+                viewModel.onTranslateClick(imageCapture) { recognizedText ->
+                    binding.vTranslateTextView.text = recognizedText
+                }
             }
-            .show()
+            vClearTextButton.setOnClickListener {
+                binding.vTranslateTextView.text = ""
+            }
+        }
     }
-
-    private fun onCameraDenied() {
-        Toast.makeText(
-            requireContext(), R.string.permission_denied_notify, Toast.LENGTH_LONG
-        ).show()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        cameraExecutor.shutdown()
-    }
-
 
     companion object {
-        private const val TAG = "CameraXApp"
-        private const val REQUEST_CODE_PERMISSIONS = 10
         private val REQUIRED_PERMISSIONS =
             mutableListOf(
                 Manifest.permission.CAMERA,
