@@ -91,7 +91,7 @@ class RecognizerRepositoryImpl @Inject constructor(
     }
 
     companion object {
-        private const val MIME_TYPE= "image/jpeg"
+        private const val MIME_TYPE = "image/jpeg"
         private const val RELATIVE_PATH = "Pictures/CameraX-Image"
         private const val TAG = "CameraXApp"
         private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"

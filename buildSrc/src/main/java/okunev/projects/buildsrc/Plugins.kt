@@ -1,4 +1,4 @@
-package okunev.projects.easypeasytravel.core.build_src
+package okunev.projects.buildsrc
 
 object Plugins {
     const val application = "com.android.application"
