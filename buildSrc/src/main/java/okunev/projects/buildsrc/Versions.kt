@@ -13,4 +13,5 @@ object Versions {
     const val hilt = "2.41"
     const val coroutines = "1.5.0"
     const val camerax = "1.1.0-beta03"
+    const val retrofit = "2.9.0"
 }

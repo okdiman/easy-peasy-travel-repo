@@ -4,4 +4,5 @@ import androidx.camera.core.ImageCapture
 
 interface RecognizerRepository {
     fun takePhoto(imageCapture: ImageCapture?, listener: (text: String) -> Unit)
+    suspend fun translateText(text: String): String
 }

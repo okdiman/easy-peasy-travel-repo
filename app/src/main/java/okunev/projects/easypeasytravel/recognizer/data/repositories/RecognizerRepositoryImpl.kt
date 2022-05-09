@@ -13,12 +13,14 @@ import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import dagger.hilt.android.qualifiers.ApplicationContext
+import okunev.projects.easypeasytravel.recognizer.data.network.TranslatorApi
 import okunev.projects.easypeasytravel.recognizer.domain.repositories.RecognizerRepository
 import java.util.*
 import javax.inject.Inject
 
 class RecognizerRepositoryImpl @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val api: TranslatorApi
 ) : RecognizerRepository {
 
     override fun takePhoto(imageCapture: ImageCapture?, listener: (text: String) -> Unit) {
@@ -59,13 +61,15 @@ class RecognizerRepositoryImpl @Inject constructor(
         )
     }
 
+    override suspend fun translateText(text: String): String {
+        return api.translate(text = text).translatedText
+    }
+
     private fun createRecognizer(image: InputImage, listener: (text: String) -> Unit) {
         val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
         recognizer.process(image)
             .addOnSuccessListener { result ->
                 listener(result.text)
-                val resultText = result.text
-                Log.e(TAG, resultText)
 //                for (block in result.textBlocks) {
 //                    val blockText = block.text
 //                    val blockCornerPoints = block.cornerPoints

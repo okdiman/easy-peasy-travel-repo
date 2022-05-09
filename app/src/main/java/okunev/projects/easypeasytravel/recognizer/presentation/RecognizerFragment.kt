@@ -5,6 +5,7 @@ import android.app.AlertDialog
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -36,6 +37,7 @@ class RecognizerFragment : Fragment(R.layout.recognizer_fragment) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setClickListeners()
+        observeLiveData()
     }
 
     private fun registerPermissionListener() {
@@ -113,13 +115,21 @@ class RecognizerFragment : Fragment(R.layout.recognizer_fragment) {
             vImageCaptureButton.setOnClickListener {
                 viewModel.onTranslateClick(imageCapture) { recognizedText ->
                     binding.vTranslateTextView.text = recognizedText
+                    viewModel.translateText(recognizedText)
                 }
             }
             vClearTextButton.setOnClickListener { binding.vTranslateTextView.text = "" }
         }
     }
 
+    private fun observeLiveData() {
+        viewModel.translatedText.observe(viewLifecycleOwner){ text ->
+            Log.e(TAG, text)
+        }
+    }
+
     companion object {
+        private const val TAG = "CameraXApp"
         private val REQUIRED_PERMISSIONS =
             mutableListOf(
                 Manifest.permission.CAMERA,

@@ -61,4 +61,6 @@ dependencies {
     implementation(Libraries.CameraX.video)
     implementation(Libraries.CameraX.view)
     implementation(Libraries.CameraX.ext)
+    implementation(Libraries.Network.retrofit)
+    implementation(Libraries.Network.converter)
 }

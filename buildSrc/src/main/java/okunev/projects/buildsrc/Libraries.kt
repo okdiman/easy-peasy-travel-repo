@@ -42,4 +42,9 @@ object Libraries {
         const val view = "androidx.camera:camera-view:${Versions.camerax}"
         const val ext = "androidx.camera:camera-extensions:${Versions.camerax}"
     }
+
+    object Network {
+        const val retrofit = "com.squareup.retrofit2:retrofit:${Versions.retrofit}"
+        const val converter = "com.squareup.retrofit2:converter-gson:${Versions.retrofit}"
+    }
 }
