@@ -5,7 +5,7 @@ import retrofit2.http.POST
 import retrofit2.http.Query
 
 interface TranslatorApi {
-    @POST("api/v3/translate")
+    @POST("/api/v3/translate")
     suspend fun translate(
         @Query("fast") fast: Boolean = false,
         @Query("from") from: String = "en",

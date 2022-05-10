@@ -20,8 +20,17 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    buildFeatures {
+        buildConfig = true
+        viewBinding true
+    }
+
     buildTypes {
+        debug {
+            buildConfigField "String", tranloApiKeyFieldName, "\"${tranloApiKey}\""
+        }
         release {
+            buildConfigField "String", tranloApiKeyFieldName, "\"${tranloApiKey}\""
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
@@ -32,9 +41,6 @@ android {
     }
     kotlinOptions {
         jvmTarget = '1.8'
-    }
-    buildFeatures {
-        viewBinding true
     }
 }
 

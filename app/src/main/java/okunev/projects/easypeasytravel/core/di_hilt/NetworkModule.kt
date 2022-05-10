@@ -6,6 +6,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okunev.projects.easypeasytravel.BuildConfig
 import okunev.projects.easypeasytravel.recognizer.data.network.TranslatorApi
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -21,9 +22,9 @@ class NetworkModule {
         return Interceptor { chain ->
             val originalRequest = chain.request()
             val modifiedRequest = originalRequest.newBuilder()
-                .addHeader("content-type", "application/x-www-form-urlencoded")
-                .addHeader("X-RapidAPI-Host", "translo.p.rapidapi.com")
-                .addHeader("X-RapidAPI-Key", "8b41dba7e2mshacbcf7ad0fe73b7p1dd78ejsnf92b8abd9d55")
+                .addHeader(CONTENT_TYPE_FIELD_NAME, CONTENT_TYPE)
+                .addHeader(X_RAPID_API_HOST_FIELD_NAME, X_RAPID_API_HOST)
+                .addHeader(X_RAPID_API_KEY_FIELD_NAME, BuildConfig.Tranlo_Api_Key)
                 .build()
             chain.proceed(modifiedRequest)
         }
@@ -31,17 +32,17 @@ class NetworkModule {
 
     @Provides
     @Singleton
-    fun providesClient(intercaptor: Interceptor): OkHttpClient {
+    fun providesClient(interceptor: Interceptor): OkHttpClient {
         return OkHttpClient.Builder()
-            .addInterceptor(intercaptor)
+            .addInterceptor(interceptor)
             .build()
     }
 
     @Provides
     @Singleton
-    fun providesRetrofit(client: OkHttpClient) : Retrofit {
+    fun providesRetrofit(client: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("https://translo.p.rapidapi.com/")
+            .baseUrl(BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .client(client)
             .build()
@@ -50,5 +51,14 @@ class NetworkModule {
     @Provides
     fun providesApi(retrofit: Retrofit): TranslatorApi {
         return retrofit.create()
+    }
+
+    companion object {
+        private const val CONTENT_TYPE_FIELD_NAME = "content-type"
+        private const val CONTENT_TYPE = "application/x-www-form-urlencoded"
+        private const val X_RAPID_API_HOST_FIELD_NAME = "X-RapidAPI-Host"
+        private const val X_RAPID_API_HOST = "translo.p.rapidapi.com"
+        private const val X_RAPID_API_KEY_FIELD_NAME = "X-RapidAPI-Key"
+        private const val BASE_URL = "https://translo.p.rapidapi.com"
     }
 }
