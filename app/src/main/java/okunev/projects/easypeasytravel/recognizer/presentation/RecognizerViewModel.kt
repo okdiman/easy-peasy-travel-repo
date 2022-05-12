@@ -10,12 +10,14 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import okunev.projects.easypeasytravel.recognizer.domain.repositories.RecognizerRepository
+import okunev.projects.easypeasytravel.recognizer.domain.usecases.api.TakePhotoUseCase
+import okunev.projects.easypeasytravel.recognizer.domain.usecases.api.TranslateTextUseCase
 import javax.inject.Inject
 
 @HiltViewModel
 class RecognizerViewModel @Inject constructor(
-    private val repository: RecognizerRepository
+    private val translateText: TranslateTextUseCase,
+    private val takePhoto: TakePhotoUseCase
 ) : ViewModel() {
 
     private val _translatedText = MutableLiveData<String>()
@@ -25,14 +27,14 @@ class RecognizerViewModel @Inject constructor(
     private var translateJob: Job? = null
 
     fun onTranslateClick(image: ImageCapture?, listener: (text: String) -> Unit) {
-        repository.takePhoto(image, listener)
+        takePhoto(image, listener)
     }
 
-    fun translateText(text: String) {
+    fun translate(text: String) {
         try {
             translateJob?.cancel()
             translateJob = viewModelScope.launch(Dispatchers.IO) {
-                _translatedText.postValue(repository.translateText(text))
+                _translatedText.postValue(translateText(text))
             }
         } catch (t: Throwable) {
             Log.e("CameraXApp", "${t.message}")

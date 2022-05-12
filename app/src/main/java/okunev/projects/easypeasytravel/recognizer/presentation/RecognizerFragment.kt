@@ -115,7 +115,7 @@ class RecognizerFragment : Fragment(R.layout.recognizer_fragment) {
             vImageCaptureButton.setOnClickListener {
                 viewModel.onTranslateClick(imageCapture) { recognizedText ->
                     binding.vTranslateTextView.text = recognizedText
-                    viewModel.translateText(recognizedText)
+                    viewModel.translate(recognizedText)
                 }
             }
             vClearTextButton.setOnClickListener { binding.vTranslateTextView.text = "" }
